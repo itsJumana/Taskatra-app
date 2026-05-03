@@ -1,0 +1,30 @@
+# Bundler
+/.bundle
+
+# Environment variables
+/.env*
+
+# Logs and temp files
+/log/*
+!/log/.keep
+/tmp/*
+!/tmp/.keep
+!/tmp/pids/
+!/tmp/pids/.keep
+
+# Precompiled assets
+/public/assets
+
+# Rails master key and any other secret keys — NEVER commit
+/config/*.key
+
+# Kamal deployment secrets and server config (keep local)
+/.kamal/
+/config/deploy.yml
+
+# Claude Code tooling
+/.agents/
+/.claude/
+/CLAUDE.md
+/skills-lock.json
+/.playwright-mcp/
