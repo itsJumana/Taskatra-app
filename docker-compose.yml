@@ -1,0 +1,32 @@
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: taskflow
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: taskflow_production
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U taskflow"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  web:
+    build: .
+    ports:
+      - "3001:80"
+    environment:
+      DB_HOST: db
+      TASKFLOW_DATABASE_PASSWORD: password
+      SOLID_QUEUE_IN_PUMA: "true"
+      RAILS_LOG_LEVEL: debug
+    volumes:
+      - ./config/master.key:/rails/config/master.key:ro
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
