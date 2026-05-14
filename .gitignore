@@ -28,3 +28,6 @@
 /CLAUDE.md
 /skills-lock.json
 /.playwright-mcp/
+
+# GSD planning docs (local only)
+.planning/
