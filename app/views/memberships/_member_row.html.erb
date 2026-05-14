@@ -1,0 +1,18 @@
+<li class="flex items-center gap-3 px-4 py-3 hover:bg-zinc-50 dark:hover:bg-zinc-800/50">
+  <span class="h-8 w-8 rounded-full bg-violet-600 text-white text-xs font-semibold flex items-center justify-center uppercase flex-shrink-0">
+    <%= membership.user.email_address[0] %>
+  </span>
+  <div class="flex-1 min-w-0">
+    <p class="text-sm font-medium text-zinc-900 dark:text-zinc-100 truncate">
+      <%= membership.user.email_address %>
+    </p>
+    <p class="text-xs text-zinc-500 dark:text-zinc-400 capitalize"><%= membership.role %></p>
+  </div>
+  <% if project_owner? && membership.role != "owner" %>
+    <%= button_to "Remove",
+          membership_path(membership),
+          method: :delete,
+          data: { turbo_confirm: "Remove #{membership.user.email_address} from this project?" },
+          class: "text-xs px-2 py-1 rounded-md text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 cursor-pointer" %>
+  <% end %>
+</li>
