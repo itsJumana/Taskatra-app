@@ -1,0 +1,31 @@
+<%= turbo_frame_tag "task-drawer" do %>
+  <div class="flex flex-col h-full">
+    <div class="flex items-center justify-between px-5 py-4 border-b border-zinc-100 dark:border-zinc-800 flex-shrink-0">
+      <div class="flex items-center gap-2">
+        <span class="text-xs font-medium text-zinc-400 dark:text-zinc-500 uppercase tracking-wide">Edit Task</span>
+        <span class="text-xs text-zinc-300 dark:text-zinc-600">#<%= @task.id %></span>
+      </div>
+      <div class="flex items-center gap-1">
+        <%= link_to "View", task_path(@task),
+              class: "text-xs font-medium text-zinc-500 dark:text-zinc-400
+                      hover:text-zinc-700 dark:hover:text-zinc-200
+                      px-2 py-1 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors" %>
+        <button type="button"
+                data-action="drawer#close"
+                class="ml-2 p-1.5 rounded-lg text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200
+                       hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+                aria-label="Close drawer">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="flex-1 overflow-y-auto px-5 py-4">
+      <%= form_with model: @task, url: task_path(@task), method: :patch do |f| %>
+        <%= render "form", f: f, task: @task, project: @project %>
+      <% end %>
+    </div>
+  </div>
+<% end %>
