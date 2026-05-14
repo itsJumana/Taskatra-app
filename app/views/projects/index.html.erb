@@ -1,0 +1,28 @@
+<% content_for(:title, "Projects") %>
+<div class="flex items-center justify-between mb-6">
+  <h1 class="text-2xl font-semibold text-zinc-900 dark:text-zinc-100">Projects</h1>
+  <%= link_to "+ New Project",
+        new_project_path,
+        class: "px-3 py-1.5 rounded-lg bg-violet-600 hover:bg-violet-700 text-white text-sm font-semibold" %>
+</div>
+
+<% if @projects.empty? %>
+  <div class="rounded-xl border border-dashed border-zinc-300 dark:border-zinc-700 p-12 text-center">
+    <p class="text-zinc-500 dark:text-zinc-400">No projects yet.</p>
+    <%= link_to "Create your first project",
+          new_project_path,
+          class: "inline-block mt-3 text-violet-600 dark:text-violet-400 font-medium hover:underline" %>
+  </div>
+<% else %>
+  <ul class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+    <% @projects.each do |project| %>
+      <li class="rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 hover:border-violet-400 dark:hover:border-violet-500 transition-colors">
+        <%= link_to project_path(project), class: "block p-5" do %>
+          <p class="text-sm font-semibold text-zinc-900 dark:text-zinc-100 mb-1 truncate"><%= project.name %></p>
+          <p class="text-xs text-zinc-500 dark:text-zinc-400 truncate"><%= project.description.presence || "No description" %></p>
+          <p class="text-[11px] text-zinc-400 dark:text-zinc-500 mt-2">Owner: <%= project.owner.email_address %></p>
+        <% end %>
+      </li>
+    <% end %>
+  </ul>
+<% end %>

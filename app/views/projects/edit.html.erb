@@ -1,0 +1,12 @@
+<% content_for(:title, "Edit #{@project.name}") %>
+<h1 class="text-2xl font-semibold text-zinc-900 dark:text-zinc-100 mb-6">Edit Project</h1>
+<%= render "form", project: @project %>
+
+<div class="mt-8 pt-6 border-t border-zinc-200 dark:border-zinc-800 max-w-lg">
+  <h2 class="text-sm font-semibold text-red-700 dark:text-red-400 mb-2">Danger zone</h2>
+  <%= button_to "Delete this project",
+        project_path(@project),
+        method: :delete,
+        data: { turbo_confirm: "Delete \"#{@project.name}\" and all its tasks? This cannot be undone." },
+        class: "px-3 py-1.5 rounded-lg bg-red-600 hover:bg-red-700 text-white text-sm font-semibold cursor-pointer" %>
+</div>
