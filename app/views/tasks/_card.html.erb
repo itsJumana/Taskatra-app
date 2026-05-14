@@ -1,0 +1,30 @@
+<%# Task card partial — rendered per task in each Kanban column %>
+<%# Local variables: task (Task record) %>
+<div class="bg-white dark:bg-zinc-900 rounded-lg p-3 shadow-sm cursor-pointer
+            hover:shadow-md hover:-translate-y-0.5 transition-all duration-150
+            border border-zinc-100 dark:border-zinc-800"
+     data-task-id="<%= task.id %>"
+     data-action="click->drawer#open"
+     data-url="<%= task_path(task) %>"
+     data-drag-handle>
+  <p class="text-sm font-medium text-zinc-800 dark:text-zinc-100 leading-snug line-clamp-2">
+    <%= task.title %>
+  </p>
+  <div class="flex items-center gap-1.5 mt-2 flex-wrap">
+    <span class="text-xs px-1.5 py-0.5 rounded font-medium <%= priority_badge_classes(task.priority) %>">
+      <%= priority_label(task.priority) %>
+    </span>
+    <% if task.due_date %>
+      <span class="text-xs text-zinc-400 dark:text-zinc-500 ml-auto">
+        <%= task.due_date.strftime("%b %-d") %>
+      </span>
+    <% end %>
+    <% if task.assignee %>
+      <span class="h-5 w-5 rounded-full bg-violet-500 text-white text-[10px] font-bold
+                   flex items-center justify-center flex-shrink-0 uppercase ml-auto"
+            title="<%= task.assignee.email_address %>">
+        <%= task.assignee.email_address[0] %>
+      </span>
+    <% end %>
+  </div>
+</div>

@@ -1,0 +1,114 @@
+<% content_for :title, "#{@project.name} — Taskatra" %>
+
+<%# Kanban board — full-height horizontal scroll container %>
+<div class="flex flex-col h-full -m-6">
+  <%# Board header %>
+  <div class="flex items-center justify-between px-6 py-3 border-b border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 flex-shrink-0">
+    <div>
+      <h1 class="text-lg font-semibold text-zinc-900 dark:text-zinc-100"><%= @project.name %></h1>
+      <% if @project.description.present? %>
+        <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5"><%= @project.description %></p>
+      <% end %>
+    </div>
+    <div class="flex items-center gap-2">
+      <%= link_to project_memberships_path(@project),
+            class: "text-xs text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition-colors px-2 py-1 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800" do %>
+        Members
+      <% end %>
+      <% if project_owner? %>
+        <%= link_to edit_project_path(@project),
+              class: "text-xs text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition-colors px-2 py-1 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800" do %>
+          Settings
+        <% end %>
+      <% end %>
+    </div>
+  </div>
+
+  <%# Kanban columns — horizontally scrollable %>
+  <div class="flex-1 overflow-x-auto overflow-y-hidden">
+    <div class="flex gap-3 h-full p-4 min-w-max"
+         data-controller="kanban">
+
+      <% Task::STATUSES.each do |status| %>
+        <%# Column header label map %>
+        <% label = { "backlog" => "Backlog", "todo" => "To Do", "in_progress" => "In Progress",
+                     "in_review" => "In Review", "done" => "Done", "cancelled" => "Cancelled" }[status] %>
+        <%# Column accent colors %>
+        <% accent = { "backlog" => "bg-zinc-400", "todo" => "bg-blue-400", "in_progress" => "bg-violet-500",
+                      "in_review" => "bg-amber-400", "done" => "bg-emerald-500", "cancelled" => "bg-zinc-300" }[status] %>
+
+        <div class="flex-shrink-0 w-64 flex flex-col bg-zinc-100 dark:bg-zinc-800/60 rounded-xl border border-zinc-200 dark:border-zinc-700/50 max-h-full">
+
+          <%# Column header %>
+          <div class="flex items-center justify-between px-3 py-2.5 flex-shrink-0">
+            <div class="flex items-center gap-2">
+              <span class="h-2 w-2 rounded-full flex-shrink-0 <%= accent %>"></span>
+              <h3 class="text-xs font-semibold text-zinc-600 dark:text-zinc-300 uppercase tracking-wide">
+                <%= label %>
+              </h3>
+            </div>
+            <span class="text-xs font-medium text-zinc-400 dark:text-zinc-500 bg-zinc-200 dark:bg-zinc-700 rounded-full px-1.5 py-0.5 tabular-nums">
+              <%= @column_counts[status] %>
+            </span>
+          </div>
+
+          <%# Task card list — SortableJS target %>
+          <div class="flex-1 overflow-y-auto px-2 pb-2 space-y-2 min-h-[3rem]"
+               data-kanban-target="column"
+               data-column-status="<%= status %>">
+            <% (@tasks_by_status[status] || []).each do |task| %>
+              <%= render "tasks/card", task: task %>
+            <% end %>
+          </div>
+
+          <%# Inline task creation per column — controlled by inline-form controller (Plan 02-08) %>
+          <div class="px-2 pb-2 flex-shrink-0"
+               data-controller="inline-form">
+            <button type="button"
+                    data-action="inline-form#show"
+                    data-inline-form-target="trigger"
+                    class="w-full flex items-center gap-1.5 px-2 py-1.5 text-xs text-zinc-400 dark:text-zinc-500
+                           hover:text-zinc-600 dark:hover:text-zinc-300 hover:bg-zinc-200/60 dark:hover:bg-zinc-700/60
+                           rounded-lg transition-colors">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+              </svg>
+              Add task
+            </button>
+
+            <div class="hidden" data-inline-form-target="form">
+              <%= turbo_frame_tag "inline_task_#{status}" do %>
+                <%= form_with url: project_tasks_path(@project),
+                              data: { action: "turbo:submit-end->inline-form#onSubmit",
+                                      turbo_frame: "inline_task_#{status}" } do |f| %>
+                  <%= f.hidden_field :status, value: status %>
+                  <%= f.text_field :title,
+                        placeholder: "Task title",
+                        autofocus: true,
+                        class: "w-full text-sm px-2 py-1.5 bg-white dark:bg-zinc-900
+                                border border-zinc-300 dark:border-zinc-600 rounded-lg
+                                text-zinc-800 dark:text-zinc-100
+                                placeholder-zinc-400 dark:placeholder-zinc-500
+                                focus:outline-none focus:ring-2 focus:ring-violet-500/50
+                                focus:border-violet-500 transition-colors" %>
+                  <div class="flex gap-1.5 mt-1.5">
+                    <%= f.submit "Add",
+                          class: "flex-1 text-xs font-medium px-2 py-1.5 bg-violet-600 hover:bg-violet-700
+                                  text-white rounded-lg transition-colors cursor-pointer" %>
+                    <button type="button"
+                            data-action="inline-form#hide"
+                            class="flex-1 text-xs font-medium px-2 py-1.5 bg-zinc-200 dark:bg-zinc-700
+                                   hover:bg-zinc-300 dark:hover:bg-zinc-600
+                                   text-zinc-600 dark:text-zinc-300 rounded-lg transition-colors">
+                      Cancel
+                    </button>
+                  </div>
+                <% end %>
+              <% end %>
+            </div>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>
