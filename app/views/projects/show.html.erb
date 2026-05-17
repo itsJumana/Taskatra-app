@@ -34,8 +34,8 @@
         <% label = { "backlog" => "Backlog", "todo" => "To Do", "in_progress" => "In Progress",
                      "in_review" => "In Review", "done" => "Done", "cancelled" => "Cancelled" }[status] %>
         <%# Column accent colors %>
-        <% accent = { "backlog" => "bg-zinc-400", "todo" => "bg-blue-400", "in_progress" => "bg-violet-500",
-                      "in_review" => "bg-amber-400", "done" => "bg-emerald-500", "cancelled" => "bg-zinc-300" }[status] %>
+        <% accent = { "backlog" => "bg-zinc-400", "todo" => "bg-blue-400", "in_progress" => "bg-amber-500",
+                      "in_review" => "bg-zinc-500", "done" => "bg-emerald-500", "cancelled" => "bg-zinc-300" }[status] %>
 
         <div class="flex-shrink-0 w-64 flex flex-col bg-zinc-100 dark:bg-zinc-800/60 rounded-xl border border-zinc-200 dark:border-zinc-700/50 max-h-full">
 
@@ -89,12 +89,12 @@
                                 border border-zinc-300 dark:border-zinc-600 rounded-lg
                                 text-zinc-800 dark:text-zinc-100
                                 placeholder-zinc-400 dark:placeholder-zinc-500
-                                focus:outline-none focus:ring-2 focus:ring-violet-500/50
-                                focus:border-violet-500 transition-colors" %>
+                                focus:outline-none focus:ring-2 focus:ring-amber-500/50
+                                focus:border-amber-500 transition-colors" %>
                   <div class="flex gap-1.5 mt-1.5">
                     <%= f.submit "Add",
-                          class: "flex-1 text-xs font-medium px-2 py-1.5 bg-violet-600 hover:bg-violet-700
-                                  text-white rounded-lg transition-colors cursor-pointer" %>
+                          class: "flex-1 text-xs font-medium px-2 py-1.5 bg-amber-500 hover:bg-amber-600
+                                  text-zinc-950 rounded-lg transition-colors cursor-pointer" %>
                     <button type="button"
                             data-action="inline-form#hide"
                             class="flex-1 text-xs font-medium px-2 py-1.5 bg-zinc-200 dark:bg-zinc-700

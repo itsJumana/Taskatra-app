@@ -1,5 +1,5 @@
 <% if task.errors.any? %>
-  <div class="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+  <div class="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl">
     <p class="text-xs font-semibold text-red-700 dark:text-red-300 mb-1">
       <%= pluralize(task.errors.count, "error") %> prevented saving:
     </p>
@@ -11,57 +11,78 @@
   </div>
 <% end %>
 
-<div class="mb-4">
-  <%= f.label :title, class: "block text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wide mb-1" %>
+<%# Title — hero input %>
+<div class="mb-5">
   <%= f.text_field :title,
-        placeholder: "Task title",
-        class: "w-full text-sm px-3 py-2 bg-white dark:bg-zinc-800
-                border border-zinc-300 dark:border-zinc-600 rounded-lg
-                text-zinc-800 dark:text-zinc-100
-                placeholder-zinc-400 dark:placeholder-zinc-500
-                focus:outline-none focus:ring-2 focus:ring-violet-500/50
-                focus:border-violet-500 transition-colors" %>
+        placeholder: "What needs to be done?",
+        required: true,
+        autocomplete: "off",
+        class: "w-full text-lg font-semibold tracking-tight
+                text-zinc-900 dark:text-zinc-50
+                placeholder-zinc-300 dark:placeholder-zinc-600
+                bg-transparent border-0 border-b-2 border-zinc-100 dark:border-zinc-800
+                focus:outline-none focus:border-amber-500
+                transition-colors pb-2" %>
 </div>
 
-<div class="mb-4">
-  <%= f.label :status, class: "block text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wide mb-1" %>
-  <%= f.select :status,
-        Task::STATUSES.map { |s| [s.split("_").map(&:capitalize).join(" "), s] },
-        { selected: task.status.presence || "backlog" },
-        class: "w-full text-sm px-3 py-2 bg-white dark:bg-zinc-800
-                border border-zinc-300 dark:border-zinc-600 rounded-lg
-                text-zinc-800 dark:text-zinc-100
-                focus:outline-none focus:ring-2 focus:ring-violet-500/50
-                focus:border-violet-500 transition-colors" %>
-</div>
+<%# Metadata pills — status, priority, assignee, due date %>
+<div class="flex flex-wrap items-center gap-1.5 mb-5 pb-5 border-b border-zinc-100 dark:border-zinc-800">
 
-<div class="mb-4">
-  <label class="block text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wide mb-1">
-    Priority
-  </label>
+  <%# Status %>
+  <div class="relative" data-controller="task-dropdown">
+    <%= f.hidden_field :status, value: task.status.presence || "backlog",
+          data: { "task-dropdown-target": "input" } %>
+    <button type="button"
+            data-action="task-dropdown#toggle"
+            class="flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-full
+                   bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400
+                   hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors">
+      <span data-task-dropdown-target="label">
+        <%= (task.status.presence || "backlog").split("_").map(&:capitalize).join(" ") %>
+      </span>
+      <svg class="w-3 h-3 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
+      </svg>
+    </button>
+    <div class="hidden absolute top-full left-0 mt-1 w-44 bg-white dark:bg-zinc-800
+                border border-zinc-200 dark:border-zinc-700 rounded-xl shadow-lg z-20 overflow-hidden py-1"
+         data-task-dropdown-target="menu">
+      <% Task::STATUSES.each do |s| %>
+        <button type="button"
+                class="w-full text-left px-3 py-1.5 text-xs text-zinc-700 dark:text-zinc-300
+                       hover:bg-zinc-50 dark:hover:bg-zinc-700/50 transition-colors"
+                data-action="task-dropdown#select"
+                data-value="<%= s %>"
+                data-label="<%= s.split("_").map(&:capitalize).join(" ") %>">
+          <%= s.split("_").map(&:capitalize).join(" ") %>
+        </button>
+      <% end %>
+    </div>
+  </div>
+
+  <%# Priority %>
   <div class="relative" data-controller="task-dropdown">
     <%= f.hidden_field :priority, value: task.priority || Task::PRIORITIES[:medium],
           data: { "task-dropdown-target": "input" } %>
     <button type="button"
             data-action="task-dropdown#toggle"
-            class="w-full flex items-center justify-between text-sm px-3 py-2 bg-white dark:bg-zinc-800
-                   border border-zinc-300 dark:border-zinc-600 rounded-lg
-                   text-zinc-800 dark:text-zinc-100 focus:outline-none focus:ring-2
-                   focus:ring-violet-500/50 focus:border-violet-500 transition-colors">
+            class="flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-full
+                   bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400
+                   hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors">
       <span data-task-dropdown-target="label">
         <%= priority_label(task.priority || Task::PRIORITIES[:medium]) %>
       </span>
-      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+      <svg class="w-3 h-3 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
       </svg>
     </button>
-    <div class="hidden absolute top-full left-0 right-0 mt-1 bg-white dark:bg-zinc-800
-                border border-zinc-200 dark:border-zinc-700 rounded-lg shadow-lg z-10 overflow-hidden"
+    <div class="hidden absolute top-full left-0 mt-1 w-36 bg-white dark:bg-zinc-800
+                border border-zinc-200 dark:border-zinc-700 rounded-xl shadow-lg z-20 overflow-hidden py-1"
          data-task-dropdown-target="menu">
       <% Task::PRIORITIES.each do |name, value| %>
         <button type="button"
-                class="w-full text-left px-3 py-2 text-sm hover:bg-zinc-50 dark:hover:bg-zinc-700/50
-                       text-zinc-700 dark:text-zinc-300 transition-colors"
+                class="w-full text-left px-3 py-1.5 text-xs text-zinc-700 dark:text-zinc-300
+                       hover:bg-zinc-50 dark:hover:bg-zinc-700/50 transition-colors"
                 data-action="task-dropdown#select"
                 data-value="<%= value %>"
                 data-label="<%= name.to_s.capitalize %>">
@@ -70,48 +91,35 @@
       <% end %>
     </div>
   </div>
-</div>
 
-<div class="mb-4">
-  <%= f.label :due_date, class: "block text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wide mb-1" %>
-  <%= f.date_field :due_date,
-        class: "w-full text-sm px-3 py-2 bg-white dark:bg-zinc-800
-                border border-zinc-300 dark:border-zinc-600 rounded-lg
-                text-zinc-800 dark:text-zinc-100
-                focus:outline-none focus:ring-2 focus:ring-violet-500/50
-                focus:border-violet-500 transition-colors" %>
-</div>
-
-<div class="mb-4">
-  <label class="block text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wide mb-1">
-    Assignee
-  </label>
+  <%# Assignee %>
   <div class="relative" data-controller="task-dropdown">
     <%= f.hidden_field :assignee_id, value: task.assignee_id,
           data: { "task-dropdown-target": "input" } %>
     <button type="button"
             data-action="task-dropdown#toggle"
-            class="w-full flex items-center justify-between text-sm px-3 py-2 bg-white dark:bg-zinc-800
-                   border border-zinc-300 dark:border-zinc-600 rounded-lg
-                   text-zinc-800 dark:text-zinc-100 focus:outline-none focus:ring-2
-                   focus:ring-violet-500/50 focus:border-violet-500 transition-colors">
-      <span data-task-dropdown-target="label">
-        <% if task.assignee %>
-          <%= task.assignee.email_address %>
-        <% else %>
-          Unassigned
-        <% end %>
+            class="flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full
+                   bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400
+                   hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors max-w-[160px]">
+      <% if task.assignee %>
+        <span class="h-3.5 w-3.5 rounded-full bg-amber-500 text-zinc-950 text-[8px] font-bold
+                     flex items-center justify-center uppercase flex-shrink-0">
+          <%= task.assignee.email_address[0] %>
+        </span>
+      <% end %>
+      <span class="truncate" data-task-dropdown-target="label">
+        <%= task.assignee&.email_address || "Unassigned" %>
       </span>
-      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+      <svg class="w-3 h-3 text-zinc-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
       </svg>
     </button>
-    <div class="hidden absolute top-full left-0 right-0 mt-1 bg-white dark:bg-zinc-800
-                border border-zinc-200 dark:border-zinc-700 rounded-lg shadow-lg z-10 overflow-hidden"
+    <div class="hidden absolute top-full left-0 mt-1 w-56 bg-white dark:bg-zinc-800
+                border border-zinc-200 dark:border-zinc-700 rounded-xl shadow-lg z-20 overflow-hidden py-1"
          data-task-dropdown-target="menu">
       <button type="button"
-              class="w-full text-left px-3 py-2 text-sm hover:bg-zinc-50 dark:hover:bg-zinc-700/50
-                     text-zinc-400 dark:text-zinc-500 italic transition-colors"
+              class="w-full text-left px-3 py-1.5 text-xs text-zinc-400 dark:text-zinc-500 italic
+                     hover:bg-zinc-50 dark:hover:bg-zinc-700/50 transition-colors"
               data-action="task-dropdown#select"
               data-value=""
               data-label="Unassigned">
@@ -119,47 +127,55 @@
       </button>
       <% project.project_memberships.includes(:user).each do |membership| %>
         <button type="button"
-                class="w-full text-left px-3 py-2 text-sm hover:bg-zinc-50 dark:hover:bg-zinc-700/50
-                       text-zinc-700 dark:text-zinc-300 transition-colors"
+                class="w-full text-left px-3 py-1.5 text-xs text-zinc-700 dark:text-zinc-300
+                       hover:bg-zinc-50 dark:hover:bg-zinc-700/50 transition-colors"
                 data-action="task-dropdown#select"
                 data-value="<%= membership.user_id %>"
                 data-label="<%= membership.user.email_address %>">
           <div class="flex items-center gap-2">
-            <span class="h-5 w-5 rounded-full bg-violet-500 text-white text-[10px] font-bold
-                         flex items-center justify-center flex-shrink-0 uppercase">
+            <span class="h-4 w-4 rounded-full bg-amber-500 text-zinc-950 text-[8px] font-bold
+                         flex items-center justify-center uppercase flex-shrink-0">
               <%= membership.user.email_address[0] %>
             </span>
-            <%= membership.user.email_address %>
+            <span class="truncate"><%= membership.user.email_address %></span>
           </div>
         </button>
       <% end %>
     </div>
   </div>
+
+  <%# Due date %>
+  <%= f.date_field :due_date,
+        class: "text-xs font-medium px-2.5 py-1 rounded-full
+                bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400
+                hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors
+                border-0 focus:outline-none focus:ring-2 focus:ring-amber-500/40
+                cursor-pointer" %>
+
 </div>
 
+<%# Description %>
 <div class="mb-5" data-controller="character-count">
-  <%= f.label :description, class: "block text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wide mb-1" %>
   <%= f.text_area :description,
         placeholder: "Add a description…",
-        rows: 4,
+        rows: 3,
         data: { "character-count-target": "input", action: "input->character-count#update" },
-        class: "w-full text-sm px-3 py-2 bg-white dark:bg-zinc-800
-                border border-zinc-300 dark:border-zinc-600 rounded-lg
-                text-zinc-800 dark:text-zinc-100
-                placeholder-zinc-400 dark:placeholder-zinc-500
-                focus:outline-none focus:ring-2 focus:ring-violet-500/50
-                focus:border-violet-500 transition-colors resize-none" %>
-  <p class="text-xs text-zinc-400 dark:text-zinc-500 mt-1 text-right"
+        class: "w-full text-sm px-3 py-2.5 bg-zinc-50 dark:bg-zinc-800/50
+                border border-zinc-100 dark:border-zinc-700/50 rounded-xl
+                text-zinc-700 dark:text-zinc-300
+                placeholder-zinc-400 dark:placeholder-zinc-600
+                focus:outline-none focus:ring-2 focus:ring-amber-500/30
+                focus:border-amber-500/50 transition-colors resize-none" %>
+  <p class="text-[11px] text-zinc-400 dark:text-zinc-600 mt-1 text-right"
      data-character-count-target="count">
     0 / 2000
   </p>
 </div>
 
-<div class="flex gap-2">
-  <%= f.submit class: "flex-1 text-sm font-medium px-4 py-2 bg-violet-600 hover:bg-violet-700
-                        text-white rounded-lg transition-colors cursor-pointer" %>
+<%# Actions %>
+<div class="flex items-center gap-3">
+  <%= f.submit class: "btn-primary cursor-pointer" %>
   <%= link_to "Cancel", project_path(project),
-        class: "flex-1 text-center text-sm font-medium px-4 py-2 bg-zinc-100 dark:bg-zinc-800
-                hover:bg-zinc-200 dark:hover:bg-zinc-700
-                text-zinc-700 dark:text-zinc-300 rounded-lg transition-colors" %>
+        class: "text-sm font-medium text-zinc-500 dark:text-zinc-400
+                hover:text-zinc-700 dark:hover:text-zinc-200 transition-colors" %>
 </div>
