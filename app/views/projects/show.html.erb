@@ -88,6 +88,7 @@
             <div class="hidden" data-inline-form-target="form">
               <%= turbo_frame_tag "inline_task_#{status}" do %>
                 <%= form_with url: project_tasks_path(@project),
+                              scope: :task,
                               data: { action: "turbo:submit-end->inline-form#onSubmit",
                                       turbo_frame: "inline_task_#{status}" } do |f| %>
                   <%= f.hidden_field :status, value: status %>
