@@ -28,7 +28,8 @@ Phase 3 workflow (`/gsd-plan-phase` / `/gsd-execute-phase` if not already
 planned in full, or directly via `03-02-PLAN.md` if it's ready to execute).
 
 **This spec adds new scope Phase 3 didn't cover: project chat.** Chat rooms,
-messages, file attachments, and task-linking from chat messages.
+messages (with an optional attachment reference), and task-linking from
+chat messages.
 
 ## Schema
 
@@ -53,28 +54,23 @@ add_index :chat_rooms, :project_id, unique: true
 
 ### `messages`
 
+`attachment_ref` is a nullable string holding a raw Cloudflare R2 object
+key/URL for at most one attachment per message. No `message_attachments`
+table, no ActiveStorage — application code uploads directly to R2 (e.g. via
+the `aws-sdk-s3` gem) and stores the resulting key/URL in this column. This
+replaces an earlier version of this spec that used ActiveStorage and a
+separate `message_attachments` table — simplified per your request to a
+single optional column.
+
 ```ruby
 create_table :messages do |t|
   t.references :chat_room, null: false, foreign_key: { on_delete: :cascade }
   t.references :user, null: false, foreign_key: true
   t.text :body, null: false
+  t.string :attachment_ref
   t.timestamps
 end
 add_index :messages, [ :chat_room_id, :created_at ]
-```
-
-### `message_attachments`
-
-Metadata row per attached file; the file itself is stored via ActiveStorage
-(`has_one_attached :file`), which manages its own
-`active_storage_blobs`/`active_storage_attachments`/
-`active_storage_variant_records` tables via its install generator.
-
-```ruby
-create_table :message_attachments do |t|
-  t.references :message, null: false, foreign_key: { on_delete: :cascade }
-  t.timestamps
-end
 ```
 
 ### `message_task_references`
@@ -95,8 +91,7 @@ add_index :message_task_references, [ :message_id, :task_id ], unique: true
 
 - `Project` — `has_one :chat_room, dependent: :destroy`
 - `ChatRoom` — `belongs_to :project`; `has_many :messages, dependent: :destroy`
-- `Message` — `belongs_to :chat_room`; `belongs_to :user`; `has_many :message_attachments, dependent: :destroy`; `has_many :message_task_references, dependent: :destroy`; `has_many :referenced_tasks, through: :message_task_references, source: :task`
-- `MessageAttachment` — `belongs_to :message`; `has_one_attached :file`
+- `Message` — `belongs_to :chat_room`; `belongs_to :user`; `has_many :message_task_references, dependent: :destroy`; `has_many :referenced_tasks, through: :message_task_references, source: :task`
 - `MessageTaskReference` — `belongs_to :message`; `belongs_to :task`
 - `User` — add `has_many :messages, dependent: :destroy`
 - `Task` — add `has_many :message_task_references, dependent: :destroy`; `has_many :referencing_messages, through: :message_task_references, source: :message`
@@ -115,11 +110,11 @@ column on `tasks`, no join table.
 - **Single assignee** stays on `tasks.assignee_id` — no `task_assignments`
   join table.
 - **Message ↔ Task linking is many-to-many** via `message_task_references`.
-- **File storage: Cloudflare R2 via ActiveStorage.** ActiveStorage is
-  currently disabled in this repo (commented out in
-  `config/application.rb`, noted in CLAUDE.md) — this phase re-enables it and
-  configures `config/storage.yml` with an `s3`-compatible service block
-  pointed at R2 (endpoint, bucket, access key via Rails credentials).
+- **File attachments are a single optional column, not a table.**
+  `messages.attachment_ref` (nullable string) holds a raw Cloudflare R2
+  object key/URL. No ActiveStorage, no `message_attachments` table — at
+  most one attachment per message. ActiveStorage stays disabled
+  (commented out in `config/application.rb`, per CLAUDE.md).
 
 ## Real-time delivery
 
@@ -136,7 +131,10 @@ work, not duplicated here.
   DB design only, per your request to design the DB first
 - Real-time broadcast wiring for chat (see above)
 - Chat UI (message list, composer, attachment upload UX)
-- R2 bucket provisioning / credentials setup (this spec only covers the
-  Rails-side `storage.yml` config shape)
+- Actual R2 upload code (e.g. `aws-sdk-s3` client, presigned URLs, bucket
+  provisioning, credential storage) — `attachment_ref` is just a string
+  column; how it gets populated is application-layer work, not schema
 - Message editing/deletion, read receipts, typing indicators
 - Multiple rooms per project (current design is one room per project)
+- Multiple attachments per message (current design is at most one, via
+  the single `attachment_ref` column)
