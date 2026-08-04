@@ -41,4 +41,8 @@ EXPOSE 3000
 # Prepare (create + migrate) the development database on every boot, then
 # start the server the same way `bin/dev` does natively. No asset or
 # bootsnap precompile step — dev boots straight from source.
-CMD ["sh", "-c", "./bin/rails db:prepare && ./bin/dev"]
+#
+# The pid file lives on the bind-mounted host tree (tmp/pids/server.pid),
+# so it survives container restarts/rebuilds. Clear it first or Puma
+# refuses to boot, believing a stale process is still running.
+CMD ["sh", "-c", "rm -f tmp/pids/server.pid && ./bin/rails db:prepare && ./bin/dev"]
