@@ -1,0 +1,47 @@
+# Local development stack. Invoke explicitly — this file is never
+# auto-loaded by a plain `docker compose up` (that continues to use
+# docker-compose.yml + the production Dockerfile, unchanged).
+#
+# Usage:
+#   docker compose -f docker-compose.dev.yml up --build
+
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: taskatra
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: taskatra_development
+    volumes:
+      - postgres_dev_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U taskatra"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    ports:
+      - "3000:3000"
+    environment:
+      RAILS_ENV: development
+      DATABASE_URL: postgres://taskatra:password@db:5432/taskatra_development
+      RAILS_LOG_LEVEL: debug
+      # Rails' dev server defaults to binding "localhost" only (see
+      # railties server_command.rb#host) — override so Puma listens on all
+      # interfaces inside the container, making the 3000:3000 port mapping
+      # actually reachable from the host.
+      BINDING: "0.0.0.0"
+    volumes:
+      - .:/rails
+    stdin_open: true
+    tty: true
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  postgres_dev_data:
