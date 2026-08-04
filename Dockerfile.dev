@@ -1,0 +1,44 @@
+# syntax=docker/dockerfile:1
+# check=error=true
+
+# This Dockerfile is for LOCAL DEVELOPMENT ONLY (RAILS_ENV=development).
+# It bind-mounts the app source for live code reload and installs the full
+# development + test gem groups. Never used by Kamal — see the root
+# Dockerfile for the production image.
+#
+# Usage:
+#   docker compose -f docker-compose.dev.yml up --build
+
+ARG RUBY_VERSION=3.4.9
+FROM docker.io/library/ruby:$RUBY_VERSION-slim
+
+WORKDIR /rails
+
+# Base + build packages in a single stage (dev image keeps build tools so
+# `bundle install` / native gem extensions work without a throwaway build
+# stage — image size doesn't matter for local dev).
+RUN apt-get update -qq && \
+    apt-get install --no-install-recommends -y \
+      build-essential curl git libpq-dev libyaml-dev pkg-config postgresql-client && \
+    rm -rf /var/lib/apt/lists /var/cache/apt/archives
+
+ENV RAILS_ENV="development" \
+    BUNDLE_PATH="/usr/local/bundle"
+
+# Install ALL gem groups (development + test included) — no BUNDLE_WITHOUT,
+# unlike the production image.
+COPY Gemfile Gemfile.lock ./
+RUN bundle install
+
+# App code is baked in so the image is runnable standalone, but
+# docker-compose.dev.yml bind-mounts the same path over it at runtime for
+# live code reload — edits on the host are reflected immediately without
+# rebuilding this image.
+COPY . .
+
+EXPOSE 3000
+
+# Prepare (create + migrate) the development database on every boot, then
+# start the server the same way `bin/dev` does natively. No asset or
+# bootsnap precompile step — dev boots straight from source.
+CMD ["sh", "-c", "./bin/rails db:prepare && ./bin/dev"]
