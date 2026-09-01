@@ -1,5 +1,6 @@
 # Bundler
 /.bundle
+/vendor/bundle
 
 # Environment variables
 /.env*
