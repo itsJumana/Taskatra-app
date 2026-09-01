@@ -26,7 +26,10 @@ module Authentication
     end
 
     def find_session_by_cookie
-      Session.find_by(id: cookies.signed[:session_id]) if cookies.signed[:session_id]
+      return unless (token = cookies[:session_token])
+
+      claims = JsonWebToken.decode(token)
+      Session.find_by(id: claims[:session_id]) if claims
     end
 
     def request_authentication
@@ -41,12 +44,13 @@ module Authentication
     def start_new_session_for(user)
       user.sessions.create!(user_agent: request.user_agent, ip_address: request.remote_ip).tap do |session|
         Current.session = session
-        cookies.signed[:session_id] = { value: session.id, httponly: true, same_site: :lax, expires: 30.days.from_now }
+        token = JsonWebToken.encode({ session_id: session.id })
+        cookies[:session_token] = { value: token, httponly: true, same_site: :lax, expires: 30.days.from_now }
       end
     end
 
     def terminate_session
       Current.session.destroy
-      cookies.delete(:session_id)
+      cookies.delete(:session_token)
     end
 end
